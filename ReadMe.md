@@ -46,7 +46,7 @@ Choose UPF
 
 [Nice diagram](https://www.researchgate.net/figure/MEC-Architecture-with-User-Plane-Function-UPF-and-Session-Management-Function-SMF_fig2_338947821)
 
-#### Why UPF is ideal
+#### Why UPF was chosen
 
 UPF handles actual user data traffic (GTP-U packets) between UE and external networks. It is the data-plane component, meaning it processes high-throughput packets.
 

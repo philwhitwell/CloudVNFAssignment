@@ -1,0 +1,6 @@
+upf:
+  config:
+    pfcp:
+      client:
+        smf:
+          - address: open5gs-smf-pfcp
