@@ -73,3 +73,6 @@ AKS clusters often introduce:
 * Azure load balancers
 * virtual NIC layers
 * These impact packet forwarding, which the UPF performs continuously.
+
+Youtube Playlist with two short videos
+https://www.youtube.com/watch?v=HftsISjGKog&list=PLBX7jugz_U1WQ6fHE-Mp7xWkzbnAyffHI

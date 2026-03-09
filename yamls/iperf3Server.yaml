@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iperf3-fixed
+  namespace: pw-open5gs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iperf3-fixed
+  template:
+    metadata:
+      labels:
+        app: iperf3-fixed
+    spec:
+      containers:
+      - name: iperf3
+        image: networkstatic/iperf3
+        command: ["iperf3"]
+        args: ["-s"]
+        ports:
+        - containerPort: 5201
+          protocol: TCP
+        - containerPort: 5201
+          protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iperf3-fixed
+  namespace: pw-open5gs
+spec:
+  selector:
+    app: iperf3-fixed
+  ports:
+  - name: tcp
+    port: 5201
+    targetPort: 5201
+    protocol: TCP
+  - name: udp
+    port: 5201
+    targetPort: 5201
+    protocol: UDP
