@@ -60,13 +60,13 @@ UPF performance depends heavily on packet processing and kernel networking optim
 
 Metrics to measure
 
-* Throughput (Mbps / Gbps)
+* Throughput (Mbps)
 * Packet latency
 * CPU utilisation
 * Pod scaling behaviour
 * Network overhead between clusters
 
-AKS vs MicroK8s
+AKS vs K3s
 
 AKS clusters often introduce:
 * overlay networking
@@ -76,3 +76,9 @@ AKS clusters often introduce:
 
 Youtube Playlist with two short videos
 https://www.youtube.com/watch?v=HftsISjGKog&list=PLBX7jugz_U1WQ6fHE-Mp7xWkzbnAyffHI
+
+SCTP
+
+5G NGAP (gNB↔AMF) uses SCTP. Kubernetes supports SCTP for ClusterIP/NodePort, but LoadBalancer SCTP depends on the cloud provider and often isn’t supported.
+So the simplest AKS  setup is: run the gNB/UE simulator inside AKS (no need to expose SCTP publicly).
+https://learn.microsoft.com/en-us/answers/questions/573521/does-azure-aks-support-sctp-and-how-to-enable-it

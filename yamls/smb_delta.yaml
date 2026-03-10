@@ -1,0 +1,17 @@
+    smf:
+      sbi:
+        server:
+        - dev: eth0
+          port: 7777
+        client:
+          scp:
+          - uri: http://open5gs-scp-sbi:7777
+      pfcp:
+        server:
+        - dev: eth0
+        client:
+          upf:
+#          - address: 51.13.23.111 used for AKS CLUSTER
+           - address: open5gs-upf-pfcp
+      gtpc:
+        server:

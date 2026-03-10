@@ -1,6 +1,7 @@
 #!/bin/bash
 
-SERVER_IP="10.244.1.66"
+#SERVER_IP="10.244.1.66" #This was the server IP for the shared ip between VM and AKS
+SERVER_IP="51.13.186.89" #This is the VM internal IP address for sending from Macbook
 UE_IP="10.45.0.3"
 DURATION=60
 WAIT_TIME=30
