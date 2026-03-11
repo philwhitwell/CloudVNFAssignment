@@ -20,12 +20,15 @@ sudo apt-get install helm
 #Install the OPen5gs on VM K3s implementation
 helm install pwk-open5gs oci://registry-1.docker.io/gradiant/open5gs --version 2.2.0 -n pwk-open5gs
 
+#Port forward the webui so a basic hello world test can be performed
 kubectl -n pwk-open5gs port-forward svc/open5gs-webui 9999:9999
 kubectl -n pwk-open5gs get svc
+
 
 kubectl -n pwk-open5gs get pods -o wide
 kubectl -n pwk-open5gs describe pod open5gs-webui-xxxxx
 
+#After running into resource issues a smaller cpu
 helm upgrade --install open5gs oci://registry-1.docker.io/gradiantcharts/open5gs \
   -n pwk-open5gs \
   -f K3s-small.yaml
