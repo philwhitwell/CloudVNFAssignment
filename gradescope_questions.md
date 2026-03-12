@@ -59,7 +59,8 @@ Performance is therefore strongly influenced by:
 * Network throughput and latency
 * Kernel networking and NIC performance
 * Memory usage for session state and buffering
-These characteristics make the UPF particularly suitable for evaluating Virtual Network Function performance on Kubernetes platforms.
+
+These characteristics make the UPF particularly suitable for evaluating Virtual Network Function performance on Kubernees platforms.
 
 #### AKS vs K3s
 Cloud environments such as Azure Kubernetes Service introduce additional networking layers such as overlay networking, Azure load balancers and virtual NIC abstractions. These layers can impact packet forwarding performance, which the UPF performs continuously.
@@ -77,20 +78,26 @@ How did you set up the cloud and edge Kubernetes environments, deploy the same V
 -----------------
 # AKS Setup
 Initially, an AKS cluster developed for a previous lab was repurposed. However, a number of quota issues were encountered because two virtual machines from earlier labs were still running alongside the AKS cluster. To resolve this, one of the VMs was removed and the AKS environment was rebuilt with a clean configuration.
+
 The main cluster setup commands are contained in:
 1. setupAKSCluster.sh
+
 Helm was used to deploy the Open5GS Helm chart. Helm was selected because it works consistently across both AKS and K3s clusters and allows configuration to be easily modified through YAML values files.
 Initially, the Open5GS deployment was reduced in size to fit within the minimal cluster configuration required for the lab environment. As AKS represented the cloud deployment, the cluster was later expanded to include additional nodes.
+
 The node scaling and configuration commands are contained in:
 2. setupAKSNode.sh
+
 A key challenge during this stage was the resource quota limitations of the Azure student subscription, which restricted available CPU and VM sizes. However, this also provided useful experience with Azure resource monitoring tools. In particular, the Cost Analysis view in the Azure portal helped monitor and understand the cost and allocation of resources.
 To simplify repeated experimentation, an aks.sh script was created to automate starting and stopping the AKS cluster (and keep costs down).
+
 As a simple “hello world” validation, a Nginx deployment was installed on the cluster and tested using curl to confirm the nodes were reachable and networking was functioning correctly. The Open5GS WebUI was also successfully accessed to verify that the deployment had completed correctly.
 
 # K3s Setup
 K3s was selected as the edge Kubernetes environment because it is designed to be lightweight and suitable for resource-constrained environments.
 The K3s installation and configuration commands are contained in:
 3. setupK3sNode.sh
+
 The main challenge in the K3s setup was reducing the Open5GS deployment so that it could run efficiently on the smaller edge node. This required adjusting CPU and memory allocations in the Helm values configuration.
 The same Open5GS Helm chart used in AKS was deployed in the K3s cluster, ensuring that both environments used the same VNF implementation and deployment method.
 As with the AKS deployment, the Open5GS WebUI was used as a simple “hello world” validation to confirm that the services were running correctly. In addition, monitoring of pod health and node resource usage was used to verify that the cluster was operating correctly once resource allocations were tuned.
@@ -139,7 +146,7 @@ These metrics help identify how efficiently the UPF processes packet traffic und
 
 ## Monitoring and Measurement
 
-Performance data was collected using Prometheus and Grafana, which were deployed on the monitoring node.
+Performance data was collected using Prometheus and Grafana, which were deployed alongside the AKS and K3s clusters.
 Prometheus collected metrics from Kubernetes nodes and containers
 Example Prometheus queries included in prometheus_queries.md:
 Grafana dashboards were then used to visualise the performance of the UPF during traffic tests. (The exports of the dashboards are included in the root folder)
@@ -164,18 +171,23 @@ The raw experimental outputs are provided in upf_iperf3_AKS.log and upf_iperf3_K
 
 The key results from the iPerf3 throughput tests are summarised below:
 * AKS scales almost linearly with the requested bandwidth up to 200 Mbps.
-* K3s saturates around ~30–35 Mbps, suggesting CPU or networking constraints in the edge deployment.
+* K3s saturates around 35 Mbps, suggesting CPU or networking constraints in the edge deployment.
 * Jitter remains low in both environments, indicating stable packet delivery.
 * Packet loss was zero in all tests, showing that throughput limitations were due to system capacity rather than network reliability.
 
 These results show that the cloud-based AKS deployment sustained near-line-rate throughput, whereas the edge-based K3s deployment exhibited performance saturation under higher traffic loads. This highlights the impact of infrastructure resources and networking layers on UPF packet processing performance.
+
 Additional performance metrics were captured using Grafana dashboards (UPF_capture_load onAKS.png, UPF_capture_load onK3s.png). These results provide further insight into system behaviour under load.
 The Grafana monitoring results show that CPU utilisation in AKS increases significantly with traffic load, reaching approximately 40%, whereas the K3s deployment remains below 6% CPU usage. Memory usage remains relatively stable in both environments (approximately 85–95 MB), indicating that UPF performance is primarily constrained by packet processing and networking capacity rather than memory consumption.
-An additional observation from the Grafana dashboards is that UPF receive traffic is approximately double the transmit traffic during high-load tests. This reflects the behaviour of the 5G user plane where GTP-U encapsulated packets are received and decapsulated by the UPF before being forwarded to external networks.
-This behaviour is consistent with the 5G system architecture defined by the 3GPP specifications, which describe the UPF as performing packet routing, forwarding, and tunnelling operations between the access network and external data networks.
-[Literature Reference](https://www.etsi.org/deliver/etsi_ts/123500_123599/123501/17.05.00_60/ts_123501v170500p.pdf)
+An additional observation from the Grafana dashboards is that UPF receive traffic is approximately double the transmit traffic during high-load tests. 
+Some caution is needed in interpreting these results, as the sampling intervals needed to get output on K3s are significantly lower than on AKS and there is not clean intervals between the ramping up of tests from 10-200 Mbps as there is on AKS (the same test was ran).
 
-The observed performance characteristics also align with findings in the literature, where UPF throughput is strongly influenced by packet processing efficiency and infrastructure networking performance. In particular, virtualisation layers and container networking can introduce overheads that affect achievable throughput, which is consistent with the lower throughput observed in the K3s edge deployment compared to the AKS cloud environment.
+
+[Literature Reference 1](https://www.etsi.org/deliver/etsi_ts/123500_123599/123501/17.05.00_60/ts_123501v170500p.pdf)
+[Literature Reference 2](https://arxiv.org/html/2404.13991v1)
+The results seem to exhibit behaviour that appears consistent with the 5G system architecture defined by the 3GPP specifications, which describe the UPF as performing packet routing, forwarding, and tunnelling operations between the access network and external data networks. Although my understanding of the 5G architecture is limited to a basic Google search.
+The observed performance characteristics also align with findings in the literature, where UPF throughput is strongly influenced by packet processing efficiency and infrastructure networking performance. 
+In particular, virtualisation layers and container networking can introduce overheads that affect achievable throughput, which is consistent with the lower throughput observed in the K3s edge deployment compared to the AKS cloud environment.
 
 ---------
 Q6 Developed code, scripts, and GenAI troubleshooting
@@ -184,11 +196,13 @@ Grading comment:
 You can either: 1) provide a link to Git, or 2) create a Zip or tar archive of the files which make up your system and upload it here.
 
 -------
+https://github.com/philwhitwell/CloudVNFAssignment.git
 
-https://youtu.be/Z4-YpnkYwLg
 
 ------
 Q7 Demo. Video
 0 Points
 Grading comment:
 Short video (maximum 2 minutes long) to demonstrate your solution and results. You can either: 1) upload it here, or 2) upload on any cloud platform of your choice, e.g. YouTube and provide the link.
+
+https://youtu.be/Z4-YpnkYwLg
