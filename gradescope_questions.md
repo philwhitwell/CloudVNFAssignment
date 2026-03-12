@@ -102,7 +102,55 @@ Q4 Experimental Design and Performance Monitoring
 Grading comment:
 Describe the setup of your experiment design and the performance metrics that were measured, including how they were obtained. 2500 characters with spaces max.
 ---------
+# Experimental Setup
 
+The experimental design focused on comparing the performance of the User Plane Function (UPF) when deployed in two different Kubernetes environments:
+* Cloud environment: Azure Kubernetes Service (AKS)
+* Edge environment: K3s running on the Azure virtual machine
+
+In both environments the same Open5GS Helm deployment was used to ensure that the VNF configuration was consistent. The goal was to observe how the different infrastructure environments affected packet forwarding performance.
+To generate realistic 5G traffic flows, UERANSIM was used to emulate a 5G User Equipment (UE) and gNB.
+https://github.com/aligungr/UERANSIM/wiki
+
+UERANSIM was executed on the Azure VM and connected to the Open5GS deployment running in AKS or locally on the K3s cluster.(see 4. installForUERANSIM.sh and 5. setupOfUERANSIMToAKS.sh) 
+Once the UE successfully registered with the network and established a PDU session, traffic could be generated through the UPF data plane.
+
+## Traffic Generation
+
+Network traffic was generated using iPerf3, which is commonly used for measuring network throughput.
+
+The basic experiment workflow was:
+* Start the iPerf3 server inside the Kubernetes environment.
+* Establish a PDU session using UERANSIM.
+* Run iPerf3 traffic from the UE towards the server through the UPF.
+* Vary the traffic rate to observe system behaviour.
+
+This generated UDP traffic at controlled bandwidth levels for a fixed time period.
+(this was scripted using 6. upf_traffic_test.sh)
+
+## Performance Metrics
+
+Several performance metrics were monitored during the experiments:
+* CPU utilisation of the UPF container
+* Network throughput (transmit and receive)
+* Memory utilisation
+
+These metrics help identify how efficiently the UPF processes packet traffic under load.
+
+## Monitoring and Measurement
+
+Performance data was collected using Prometheus and Grafana, which were deployed on the monitoring node.
+Prometheus collected metrics from Kubernetes nodes and containers
+Example Prometheus queries included in prometheus_queries.md:
+Grafana dashboards were then used to visualise the performance of the UPF during traffic tests. (The exports of the dashboards are included in the root folder)
+
+## Test Execution
+
+The experiments were executed in two scenarios:
+1. AKS scenario – UERANSIM running on the VM and generated traffic routed to the UPF pod deployed in the AKS cluster.
+2. K3s scenario – both UERANSIM and the Open5GS deployment were executed within the VM environment.
+
+Comparing these two setups allowed the performance impact of cloud infrastructure versus lightweight edge Kubernetes to be evaluated.
 
 
 ----------
@@ -111,13 +159,35 @@ Q5 Results and Discussion
 10 Points
 Grading comment:
 Results - in the form of tables and /or graphs. To be uploaded. Discussion of results and contrast with the literature. 3000 characters with spaces max.
+---------
+The raw experimental outputs are provided in upf_iperf3_AKS.log and upf_iperf3_K3s.log, with a summarised comparison in summaryOfUPFLogs.md. The results are also visualised in upf_throughput_comparison.png.
 
+The key results from the iPerf3 throughput tests are summarised below:
+* AKS scales almost linearly with the requested bandwidth up to 200 Mbps.
+* K3s saturates around ~30–35 Mbps, suggesting CPU or networking constraints in the edge deployment.
+* Jitter remains low in both environments, indicating stable packet delivery.
+* Packet loss was zero in all tests, showing that throughput limitations were due to system capacity rather than network reliability.
+
+These results show that the cloud-based AKS deployment sustained near-line-rate throughput, whereas the edge-based K3s deployment exhibited performance saturation under higher traffic loads. This highlights the impact of infrastructure resources and networking layers on UPF packet processing performance.
+Additional performance metrics were captured using Grafana dashboards (UPF_capture_load onAKS.png, UPF_capture_load onK3s.png). These results provide further insight into system behaviour under load.
+The Grafana monitoring results show that CPU utilisation in AKS increases significantly with traffic load, reaching approximately 40%, whereas the K3s deployment remains below 6% CPU usage. Memory usage remains relatively stable in both environments (approximately 85–95 MB), indicating that UPF performance is primarily constrained by packet processing and networking capacity rather than memory consumption.
+An additional observation from the Grafana dashboards is that UPF receive traffic is approximately double the transmit traffic during high-load tests. This reflects the behaviour of the 5G user plane where GTP-U encapsulated packets are received and decapsulated by the UPF before being forwarded to external networks.
+This behaviour is consistent with the 5G system architecture defined by the 3GPP specifications, which describe the UPF as performing packet routing, forwarding, and tunnelling operations between the access network and external data networks.
+[Literature Reference](https://www.etsi.org/deliver/etsi_ts/123500_123599/123501/17.05.00_60/ts_123501v170500p.pdf)
+
+The observed performance characteristics also align with findings in the literature, where UPF throughput is strongly influenced by packet processing efficiency and infrastructure networking performance. In particular, virtualisation layers and container networking can introduce overheads that affect achievable throughput, which is consistent with the lower throughput observed in the K3s edge deployment compared to the AKS cloud environment.
+
+---------
 Q6 Developed code, scripts, and GenAI troubleshooting
 10 Points
 Grading comment:
 You can either: 1) provide a link to Git, or 2) create a Zip or tar archive of the files which make up your system and upload it here.
 
+-------
 
+https://youtu.be/Z4-YpnkYwLg
+
+------
 Q7 Demo. Video
 0 Points
 Grading comment:
